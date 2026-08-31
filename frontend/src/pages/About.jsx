@@ -53,10 +53,9 @@ export default function About() {
               </motion.div>
             </motion.div>
 
-            <motion.div
-              variants={scaleIn} initial="hidden" animate="show"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ position: "relative" }}>
+            <motion.div className="about-visual-col"
+              variants={scaleIn} initial="hidden" animate="show">
+              <div className="about-logo-badge">
                 <div style={{
                   position: "absolute", inset: -16, borderRadius: "50%",
                   background: "radial-gradient(circle, rgba(255,79,157,0.12) 0%, transparent 70%)",
@@ -73,9 +72,25 @@ export default function About() {
                   animation: "aboutSpin 28s linear infinite reverse",
                 }} />
                 <img src="/images/logo.png" alt="Mary Nassif Chbat Beauty Clinic"
-                  style={{ width: 320, height: 320, objectFit: "cover", borderRadius: "50%",
+                  style={{ width: 240, height: 240, objectFit: "cover", borderRadius: "50%",
                     boxShadow: "0 0 0 6px rgba(197,168,128,0.15), 0 16px 64px rgba(197,168,128,0.25)",
                     display: "block", position: "relative", zIndex: 1 }} />
+              </div>
+
+              <div className="about-map-card">
+                <iframe
+                  className="about-map-frame"
+                  title="Mary Nassif Chbat Beauty Clinic — Sed El Boushrieh, Lebanon"
+                  src="https://maps.google.com/maps?q=Mary%20Nassif%20Chbat%20Beauty%20Clinic%2C%20Ossaily%20Street%2C%20Sed%20El%20Boushrieh%2C%20Lebanon&z=15&output=embed"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+                <a className="about-map-open"
+                  href="https://maps.google.com/maps?q=Mary+Nassif+Chbat+Beauty+Clinic,+Ossaily+Street,+Sed+El+Boushrieh,+Lebanon"
+                  target="_blank" rel="noreferrer">
+                  <i className="fas fa-map-marker-alt" /> Sed El Boushrieh, Ossaily Street — Get Directions
+                </a>
               </div>
             </motion.div>
 

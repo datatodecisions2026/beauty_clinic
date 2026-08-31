@@ -828,8 +828,31 @@ body::after {
 /* ===== ABOUT PAGE ===== */
 .about-page { padding: 0; background: var(--bg); }
 .about-page-hero { background: var(--bg); padding: 100px 0 120px; border-bottom: 1px solid var(--border); }
-.about-page-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+.about-page-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
 .about-page-img { width: 100%; height: 480px; object-fit: cover; border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+
+/* ── Visual column: logo badge + location map ── */
+.about-visual-col { display: flex; flex-direction: column; align-items: center; gap: 72px; padding-top: 8px; }
+.about-logo-badge { position: relative; flex-shrink: 0; }
+.about-map-card {
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 16px 48px rgba(197,168,128,0.18);
+  background: var(--bg);
+}
+.about-map-frame { display: block; width: 100%; height: 300px; border: 0; filter: saturate(0.95); }
+.about-map-open {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 16px;
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--pink);
+  border-top: 1.5px solid var(--border);
+  transition: background 0.2s ease;
+}
+.about-map-open:hover { background: rgba(255,79,157,0.06); }
+.about-map-open i { font-size: 0.9rem; }
 
 /* ── Reveal animations ── */
 .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; transition-delay: var(--delay, 0ms); }
@@ -989,7 +1012,7 @@ body::after {
 .about-info-row { display: flex; align-items: flex-start; gap: 12px; font-size: 0.9rem; color: var(--text); }
 .about-info-icon { color: var(--pink); width: 16px; margin-top: 3px; flex-shrink: 0; }
 .about-socials { display: flex; gap: 10px; }
-@media (max-width: 900px) { .about-page-grid { grid-template-columns: 1fr; gap: 40px; } .about-page-img { height: 300px; } .specialties-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .about-page-grid { grid-template-columns: 1fr; gap: 40px; } .about-page-img { height: 300px; } .specialties-grid { grid-template-columns: repeat(2, 1fr); } .about-visual-col { gap: 48px; } .about-map-frame { height: 260px; } }
 
 /* ===== ADMIN ===== */
 .admin-page { padding: 48px 0 100px; background: var(--bg); min-height: 80vh; }
