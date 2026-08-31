@@ -219,7 +219,14 @@ button { cursor: pointer; font-family: inherit; }
 .hero-link:hover { color: var(--pink-hover); }
 .hero-img-wrap { position: relative; display: flex; align-items: center; justify-content: center; overflow: visible; z-index: 2; }
 .hero-img-circle { position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(197,168,128,0.22) 0%, rgba(179,150,110,0.1) 50%, transparent 70%); }
-.hero-orb { position: absolute; width: 620px; height: 620px; z-index: 2; opacity: 0.92; mix-blend-mode: screen; }
+.hero-orb {
+  position: absolute; width: 620px; height: 620px; z-index: 2;
+  opacity: 0.85; mix-blend-mode: screen;
+  /* Feather the square canvas edges so the shader's faint dark fill
+     never reads as a box on the light page. */
+  -webkit-mask-image: radial-gradient(circle farthest-side at 50% 50%, #000 55%, rgba(0,0,0,0.55) 78%, transparent 100%);
+  mask-image: radial-gradient(circle farthest-side at 50% 50%, #000 55%, rgba(0,0,0,0.55) 78%, transparent 100%);
+}
 .hero-img { position: relative; width: 100%; max-width: 620px; height: auto; object-fit: contain; display: block; filter: drop-shadow(0 0 40px rgba(197,168,128,0.3)); margin-bottom: -1px; }
 .hero-badge { position: absolute; bottom: 130px; left: -8px; background: rgba(255,255,255,0.75); border: 1px solid var(--border); backdrop-filter: blur(12px); border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); z-index: 2; }
 .hero-badge-icon { width: 36px; height: 36px; background: var(--pink); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; flex-shrink: 0; }
@@ -326,14 +333,6 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
   opacity: 0.028;
 }
-
-/* ===== ELEGANT MARQUEE BANNER ===== */
-.marquee-banner { overflow: hidden; padding: 14px 0; background: rgba(244,235,230,0.92); backdrop-filter: blur(8px); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.marquee-track { display: flex; width: max-content; animation: marqueeScroll 32s linear infinite; }
-.marquee-track:hover { animation-play-state: paused; }
-.marquee-item { padding: 0 28px; white-space: nowrap; color: var(--muted); font-size: 0.72rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 500; }
-.marquee-star { padding: 0 8px; color: var(--pink); font-size: 0.6rem; }
-@keyframes marqueeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
 /* ===== SERVICES MASONRY ===== */
 .services-section { padding: 100px 0; background: var(--bg); }
@@ -986,6 +985,58 @@ body::after {
   .aurora-blob { animation: none !important; }
 }
 
+/* ── Floral atmosphere — floating rose & petal SVG backdrop ── */
+.floral-atmosphere {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.floral-item {
+  position: absolute;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+.floral-item__inner {
+  display: block;
+  width: 100%; height: 100%;
+  background: var(--tint, #C5A880);
+  -webkit-mask: var(--src) center / contain no-repeat;
+          mask: var(--src) center / contain no-repeat;
+  will-change: transform;
+  animation: floralDrift var(--dur, 14s) var(--delay, 0s) ease-in-out infinite;
+}
+@keyframes floralDrift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--r0, 0deg)) scale(1);
+  }
+  50% {
+    transform: translate3d(var(--fx, 0), var(--fy, 0), 0)
+      rotate(var(--r1, 0deg)) scale(var(--s1, 1.04));
+  }
+}
+.floral-cursor-light {
+  position: absolute; top: 0; left: 0;
+  width: var(--cl-size, 640px); height: var(--cl-size, 640px);
+  margin-left: calc(var(--cl-size, 640px) / -2);
+  margin-top: calc(var(--cl-size, 640px) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(231, 203, 193, 0.1) 0%,
+    rgba(218, 192, 163, 0.05) 32%,
+    transparent 70%);
+  filter: blur(44px);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  will-change: transform;
+}
+.floral-atmosphere.is-active .floral-cursor-light { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .floral-item__inner { animation: none !important; }
+  .floral-cursor-light { display: none !important; }
+}
+
 /* ── CTA button shimmer sweep ── */
 .btn-premium { position: relative; overflow: hidden; }
 .btn-premium::after {
@@ -1372,4 +1423,222 @@ body { overflow-x: clip; }
 
 @media (max-width: 860px) {
   .hero-orb { width: 320px; height: 320px; opacity: 0.65; }
+}
+
+/* ===== SCROLL-DRIVEN 3D PRODUCT EXPERIENCE ===== */
+.product-exp {
+  position: relative;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(234,219,200,0.55) 0%, rgba(245,242,235,0) 60%),
+    var(--bg);
+}
+.product-exp__pin {
+  position: relative;
+  height: 100vh;
+  min-height: 640px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Layer 0 — soft champagne backdrop glow (opacity driven from JS) */
+.product-exp__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(70vw, 820px);
+  height: min(70vw, 820px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(197,168,128,0.30) 0%, rgba(218,192,163,0.12) 45%, rgba(245,242,235,0) 72%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Layer 1 — quiet botanical whispers, corners only, never over the branding */
+.product-exp__petals {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.product-exp__petals span {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  background: #DAC0A3;
+  -webkit-mask: url(/petal.svg) center / contain no-repeat;
+  mask: url(/petal.svg) center / contain no-repeat;
+}
+.product-exp__petals span:first-child { left: -34px; top: 8%; transform: rotate(24deg); }
+.product-exp__petals span:last-child { right: -30px; bottom: 6%; transform: rotate(-142deg); }
+
+/* Layer 2 — the WebGL canvas (never intercepts input) */
+.product-exp__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.product-exp__canvas canvas { display: block; }
+
+/* Layer 3 — story copy */
+.product-exp__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.pe-stage-inner { position: absolute; inset: 0; }
+.product-exp__stage a,
+.product-exp__stage button { pointer-events: auto; }
+
+.pe-state {
+  position: absolute;
+  will-change: opacity, transform;
+}
+.pe-state--a { left: 50%; top: 10%; transform: translateX(-50%); text-align: center; width: min(88vw, 460px); }
+.pe-state--b { left: max(20px, 6vw); top: 50%; transform: translateY(-50%); width: min(34vw, 340px); }
+.pe-state--c { right: max(20px, 6vw); top: 50%; transform: translateY(-50%); text-align: right; width: min(34vw, 340px); }
+.pe-state--d { left: 50%; bottom: 12%; transform: translateX(-50%); text-align: center; width: min(90vw, 480px); }
+
+.pe-state--b .pe-headline,
+.pe-state--c .pe-headline { font-size: clamp(1.9rem, 3.6vw, 3rem); }
+
+.pe-script {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--pink);
+  letter-spacing: 0.03em;
+  margin-bottom: 10px;
+}
+.pe-headline {
+  font-family: 'Bodoni Moda', serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 0.94;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  color: var(--dark);
+  margin: 8px 0 16px;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+.pe-headline--finale {
+  background: linear-gradient(110deg, #1A1519 0%, #8A7355 30%, #C5A880 50%, #8A7355 70%, #1A1519 100%);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerText 3.5s linear infinite;
+}
+.pe-copy {
+  color: #2C2520;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  font-weight: 500;
+  max-width: 100%;
+}
+.pe-state--a .pe-copy,
+.pe-state--d .pe-copy { margin-left: auto; margin-right: auto; }
+.pe-state--c .pe-copy { margin-left: auto; }
+.pe-state--d .btn-premium { margin-top: 26px; }
+
+/* Elegant, low-key loading state */
+.pe-loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.6s ease;
+  z-index: 4;
+  pointer-events: none;
+}
+.pe-loader.is-done { opacity: 0; }
+.pe-loader__ring {
+  display: block;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid rgba(197,168,128,0.25);
+  border-top-color: var(--pink);
+  animation: spin 0.9s linear infinite;
+}
+
+/* Reduced motion / no-WebGL — one calm static campaign block, stacked so the
+   jar (when present) and the copy never overlap. */
+.product-exp.is-reduced .product-exp__pin,
+.product-exp.is-fallback .product-exp__pin {
+  height: auto;
+  min-height: 82vh;
+  padding: 88px 24px;
+  flex-direction: column;
+  gap: 8px;
+  overflow: visible;
+}
+.product-exp.is-reduced .product-exp__canvas {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 44vh;
+  flex: none;
+}
+.product-exp.is-reduced .product-exp__stage,
+.product-exp.is-fallback .product-exp__stage {
+  position: relative;
+  inset: auto;
+  flex: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pe-stage-inner--static {
+  position: relative;
+  inset: auto;
+}
+.pe-state--static {
+  position: relative;
+  text-align: center;
+  max-width: 520px;
+  padding: 0 8px;
+}
+.pe-state--static .pe-copy { margin: 0 auto; }
+.pe-state--static .btn-premium { margin-top: 26px; }
+
+/* Tablet — keep the choreography, trim the reach */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pe-state { max-width: 300px; }
+  .pe-state--b { left: max(20px, 4vw); }
+  .pe-state--c { right: max(20px, 4vw); }
+}
+
+/* Mobile — simplified vertical version: text above / below a centred jar */
+@media (max-width: 768px) {
+  .product-exp__pin { min-height: 560px; }
+  .product-exp__petals span { width: 130px; height: 130px; }
+  .pe-state,
+  .pe-state--a,
+  .pe-state--b,
+  .pe-state--c,
+  .pe-state--d {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    text-align: center;
+    width: calc(100% - 48px);
+    max-width: 420px;
+  }
+  .pe-state--a { top: 7%; }
+  .pe-state--b,
+  .pe-state--c { top: auto; bottom: 10%; }
+  .pe-state--d { bottom: 7%; }
+  .pe-copy,
+  .pe-state--c .pe-copy { margin-left: auto; margin-right: auto; }
+  .pe-headline { font-size: clamp(2.4rem, 12vw, 3.4rem); }
 }
