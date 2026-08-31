@@ -44,23 +44,8 @@ function SoftShadow({ stateRef }) {
   )
 }
 
-/* Low-power devices: keep the rAF loop running (so scroll transforms stay
- * smooth) but only issue an actual GL draw at `fps`. Roughly halves GPU cost. */
-function FpsCap({ fps = 30 }) {
-  const last = useRef(0)
-  const step = 1 / fps
-  useFrame((state) => {
-    const now = state.clock.elapsedTime
-    if (now - last.current >= step) {
-      last.current = now
-      state.gl.render(state.scene, state.camera)
-    }
-  }, 1)
-  return null
-}
-
 /* Lighting rig + per-frame reads of the animated state. */
-function Rig({ stateRef, reduced, lowPower }) {
+function Rig({ stateRef, reduced, lowPower, active }) {
   const keyRef = useRef(null)
   const rimRef = useRef(null)
   const invalidate = useThree((state) => state.invalidate)
@@ -72,6 +57,18 @@ function Rig({ stateRef, reduced, lowPower }) {
     const stop = setTimeout(() => clearInterval(id), 1800)
     return () => { clearInterval(id); clearTimeout(stop) }
   }, [invalidate, reduced])
+
+  // Whenever the section re-enters view, force a repaint so the model can't be
+  // left invisible after the render loop was paused (scroll away → back).
+  useEffect(() => {
+    if (!active) return
+    let n = 0
+    const paint = () => {
+      invalidate()
+      if (++n < 4) requestAnimationFrame(paint)
+    }
+    paint()
+  }, [active, invalidate])
 
   useFrame((state, delta) => {
     const s = stateRef.current
@@ -131,7 +128,7 @@ export default function ProductCanvas({ stateRef, reduced, pointerEnabled, lowPo
 
   const frameloop = reduced ? "demand" : active ? "always" : "never"
   // Keep the product crisp: MSAA + a 2x-capped DPR even on phones. The mobile
-  // budget is recovered by the simpler choreography + the 30fps draw cap.
+  // budget is recovered by the simpler choreography + trimmed lights/env.
   const deviceDpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
   const dpr = reduced ? 1.5 : lowPower ? Math.min(2, deviceDpr) : [1, 2]
 
@@ -153,8 +150,7 @@ export default function ProductCanvas({ stateRef, reduced, pointerEnabled, lowPo
           gl.toneMappingExposure = EXPOSURE
         }}
       >
-        <Rig stateRef={stateRef} reduced={reduced} lowPower={lowPower} />
-        {lowPower && !reduced && <FpsCap fps={30} />}
+        <Rig stateRef={stateRef} reduced={reduced} lowPower={lowPower} active={active} />
         <SoftShadow stateRef={stateRef} />
         <Suspense fallback={null}>
           <ProductModel
