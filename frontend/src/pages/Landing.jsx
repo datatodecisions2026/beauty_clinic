@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring }
 import { fadeUp, fadeIn, slideLeft, slideRight, stagger, letterUp, ease } from "../lib/motion"
 import GoogleReviewsWidget from "../components/GoogleReviewsWidget"
 import FloatingParticles from "../components/FloatingParticles"
+import Orb from "../components/Orb"
 
 const MotionLink = motion.create(Link)
 
@@ -246,6 +247,9 @@ export default function Landing() {
               initial={{ opacity: 0, scale: 0.92, x: 40 }} animate={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.3, ease }}>
               <div className="hero-img-circle" />
+              <div className="hero-orb" aria-hidden="true">
+                <Orb hue={28} hoverIntensity={0.4} rotateOnHover forceHoverState={false} backgroundColor="#F5F2EB" />
+              </div>
               <img src="/images/hero-illustration.png" alt="Beauty" className="hero-img" />
             </motion.div>
           </div>
