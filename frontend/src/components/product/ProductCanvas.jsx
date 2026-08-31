@@ -44,9 +44,23 @@ function SoftShadow({ stateRef }) {
   )
 }
 
-/* Lighting rig + per-frame reads of the animated state. Also owns the
- * canvas-layer fade so opacity stays out of React. */
-function Rig({ stateRef, reduced }) {
+/* Low-power devices: keep the rAF loop running (so scroll transforms stay
+ * smooth) but only issue an actual GL draw at `fps`. Roughly halves GPU cost. */
+function FpsCap({ fps = 30 }) {
+  const last = useRef(0)
+  const step = 1 / fps
+  useFrame((state) => {
+    const now = state.clock.elapsedTime
+    if (now - last.current >= step) {
+      last.current = now
+      state.gl.render(state.scene, state.camera)
+    }
+  }, 1)
+  return null
+}
+
+/* Lighting rig + per-frame reads of the animated state. */
+function Rig({ stateRef, reduced, lowPower }) {
   const keyRef = useRef(null)
   const rimRef = useRef(null)
   const invalidate = useThree((state) => state.invalidate)
@@ -76,24 +90,30 @@ function Rig({ stateRef, reduced }) {
       <directionalLight ref={keyRef} position={LIGHTS.key.position} color={LIGHTS.key.color} intensity={1} />
       <directionalLight position={LIGHTS.fill.position} color={LIGHTS.fill.color} intensity={LIGHTS.fill.intensity} />
       <directionalLight ref={rimRef} position={LIGHTS.rim.position} color={LIGHTS.rim.color} intensity={0.4} />
-      <directionalLight position={LIGHTS.top.position} color={LIGHTS.top.color} intensity={LIGHTS.top.intensity} />
-      <directionalLight position={LIGHTS.under.position} color={LIGHTS.under.color} intensity={LIGHTS.under.intensity} />
+      {!lowPower && (
+        <>
+          <directionalLight position={LIGHTS.top.position} color={LIGHTS.top.color} intensity={LIGHTS.top.intensity} />
+          <directionalLight position={LIGHTS.under.position} color={LIGHTS.under.color} intensity={LIGHTS.under.intensity} />
+        </>
+      )}
 
-      {/* Inline soft-box environment — no external HDR, keeps reflections gentle.
-          Lightformers surround the product so the champagne cap keeps clean
-          highlights from every angle as it tilts and floats. */}
-      <Environment resolution={128} environmentIntensity={LIGHTS.envIntensity}>
+      {/* Inline soft-box environment — no external HDR. Trimmed on low-power. */}
+      <Environment resolution={lowPower ? 32 : 128} environmentIntensity={LIGHTS.envIntensity}>
         <Lightformer form="rect" intensity={3.0} color="#fff6ec" position={[0, 3, 2]} scale={[6, 3, 1]} />
         <Lightformer form="rect" intensity={1.6} color="#f6e6d2" position={[-4, 1, 2]} scale={[3, 4, 1]} />
         <Lightformer form="rect" intensity={1.4} color="#ffedd8" position={[4, 0.5, 3]} scale={[3, 3, 1]} />
-        <Lightformer form="rect" intensity={1.5} color="#fff4e6" position={[0, 4.5, 0.5]} scale={[4, 2, 1]} rotation={[Math.PI / 2, 0, 0]} />
-        <Lightformer form="circle" intensity={1.8} color="#ffffff" position={[0, 1, -4]} scale={[5, 5, 1]} />
+        {!lowPower && (
+          <>
+            <Lightformer form="rect" intensity={1.5} color="#fff4e6" position={[0, 4.5, 0.5]} scale={[4, 2, 1]} rotation={[Math.PI / 2, 0, 0]} />
+            <Lightformer form="circle" intensity={1.8} color="#ffffff" position={[0, 1, -4]} scale={[5, 5, 1]} />
+          </>
+        )}
       </Environment>
     </>
   )
 }
 
-export default function ProductCanvas({ stateRef, reduced, pointerEnabled, onReady }) {
+export default function ProductCanvas({ stateRef, reduced, pointerEnabled, lowPower, onReady }) {
   const hostRef = useRef(null)
   const [active, setActive] = useState(true)
 
@@ -110,13 +130,20 @@ export default function ProductCanvas({ stateRef, reduced, pointerEnabled, onRea
   }, [])
 
   const frameloop = reduced ? "demand" : active ? "always" : "never"
+  const dpr = reduced ? 1.25 : lowPower ? Math.min(1.5, typeof window !== "undefined" ? window.devicePixelRatio : 1) : [1, 2]
 
   return (
     <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>
       <Canvas
         frameloop={frameloop}
-        dpr={[1, reduced ? 1.5 : 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        dpr={dpr}
+        gl={{
+          antialias: !lowPower,
+          alpha: true,
+          stencil: false,
+          powerPreference: "high-performance",
+          ...(lowPower ? { precision: "mediump" } : null),
+        }}
         camera={CAMERA}
         style={{ pointerEvents: "none" }}
         onCreated={({ gl }) => {
@@ -124,13 +151,15 @@ export default function ProductCanvas({ stateRef, reduced, pointerEnabled, onRea
           gl.toneMappingExposure = EXPOSURE
         }}
       >
-        <Rig stateRef={stateRef} reduced={reduced} />
+        <Rig stateRef={stateRef} reduced={reduced} lowPower={lowPower} />
+        {lowPower && !reduced && <FpsCap fps={30} />}
         <SoftShadow stateRef={stateRef} />
         <Suspense fallback={null}>
           <ProductModel
             stateRef={stateRef}
             reduced={reduced}
             pointerEnabled={pointerEnabled}
+            lowPower={lowPower}
             onReady={onReady}
           />
           <Preload all />

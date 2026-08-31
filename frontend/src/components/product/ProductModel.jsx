@@ -22,7 +22,7 @@ function boxTop(obj) {
  *       jarPivot    jar body + cream, counter-rotation
  *       capPivot    champagne lid, independent separation + spin
  */
-export default function ProductModel({ stateRef, reduced, pointerEnabled, onReady }) {
+export default function ProductModel({ stateRef, reduced, pointerEnabled, lowPower, onReady }) {
   const floatRef = useRef(null)
   const productRef = useRef(null)
   const { scene } = useGLTF(MODEL_URL)
@@ -47,7 +47,12 @@ export default function ProductModel({ stateRef, reduced, pointerEnabled, onRead
       o.receiveShadow = false
       o.frustumCulled = false
       if (o.material) {
-        o.material.envMapIntensity = 0.55
+        o.material.envMapIntensity = lowPower ? 0.42 : 0.55
+        if (lowPower && "clearcoat" in o.material) {
+          // Drop the clearcoat BRDF on mobile — removes the priciest shader path.
+          o.material.clearcoat = 0
+          o.material.clearcoatRoughness = 0
+        }
         o.material.needsUpdate = true
       }
     })
@@ -98,7 +103,7 @@ export default function ProductModel({ stateRef, reduced, pointerEnabled, onRead
     norm.scale.setScalar(TARGET_SIZE / Math.max(aSize.x, aSize.y, aSize.z))
 
     return { norm, capPivot, jarPivot, capRestLocal }
-  }, [scene])
+  }, [scene, lowPower])
 
   useEffect(() => {
     onReady?.()

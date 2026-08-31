@@ -63,6 +63,17 @@ export default function ProductExperience() {
     return window.matchMedia("(pointer: fine)").matches
   }, [reduced])
 
+  // Phones / tablets / weak GPUs get a lighter renderer (lower DPR, no MSAA,
+  // fewer lights, no clearcoat, capped framerate). Desktop is untouched.
+  const lowPower = useMemo(() => {
+    if (typeof window === "undefined") return false
+    const coarse = window.matchMedia("(pointer: coarse)").matches
+    const small = window.matchMedia("(max-width: 900px)").matches
+    const weakCpu = (navigator.hardwareConcurrency || 8) <= 4
+    const weakMem = (navigator.deviceMemory || 8) <= 4
+    return coarse || small || weakCpu || weakMem
+  }, [])
+
   // `useReducedMotion` can resolve after first paint — keep the shared pose
   // object in sync so the model reads the right starting state.
   useEffect(() => {
@@ -175,6 +186,7 @@ export default function ProductExperience() {
                   stateRef={stateRef}
                   reduced={!!reduced}
                   pointerEnabled={pointerEnabled}
+                  lowPower={lowPower}
                   onReady={() => setReady(true)}
                 />
               </Suspense>
