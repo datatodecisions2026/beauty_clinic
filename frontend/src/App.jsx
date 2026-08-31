@@ -15,6 +15,7 @@ import AssistantLogin from "./pages/AssistantLogin"
 import About from "./pages/About"
 import Preloader from "./components/Preloader"
 import ErrorBoundary from "./components/ErrorBoundary"
+import ClickSpark from "./components/ClickSpark"
 
 const queryClient = new QueryClient()
 
@@ -41,6 +42,7 @@ function ScrollReset() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ClickSpark sparkColor="#C5A880" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
       <BrowserRouter>
         <ScrollReset />
         <Preloader />
@@ -65,6 +67,7 @@ export default function App() {
           } />
         </Routes>
       </BrowserRouter>
+      </ClickSpark>
     </QueryClientProvider>
   )
 }
