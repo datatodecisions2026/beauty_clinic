@@ -248,7 +248,7 @@ export default function Landing() {
               transition={{ duration: 1, delay: 0.3, ease }}>
               <div className="hero-img-circle" />
               <div className="hero-orb" aria-hidden="true">
-                <Orb hue={28} hoverIntensity={0.4} rotateOnHover forceHoverState={false} backgroundColor="#F5F2EB" />
+                <Orb hue={20} hoverIntensity={1} rotateOnHover forceHoverState={false} backgroundColor="#1A1519" />
               </div>
               <img src="/images/hero-illustration.png" alt="Beauty" className="hero-img" />
             </motion.div>
