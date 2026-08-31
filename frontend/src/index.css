@@ -1634,10 +1634,11 @@ body { overflow-x: clip; }
     width: calc(100% - 48px);
     max-width: 420px;
   }
-  .pe-state--a { top: 7%; }
+  /* clear the fixed 68px mobile navbar so the headline never clips at the top */
+  .pe-state--a { top: max(92px, 12%); }
   .pe-state--b,
   .pe-state--c { top: auto; bottom: 10%; }
-  .pe-state--d { bottom: 7%; }
+  .pe-state--d { bottom: 8%; }
   .pe-copy,
   .pe-state--c .pe-copy { margin-left: auto; margin-right: auto; }
   .pe-headline { font-size: clamp(2.4rem, 12vw, 3.4rem); }

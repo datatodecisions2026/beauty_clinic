@@ -145,6 +145,36 @@ const DESKTOP_FRAMES = {
   },
 }
 
+/* ---------------------------------------------------------------------------
+ * Mobile keyframes — a deliberately simpler sequence: the jar arrives, the
+ * lid opens, holds open, then closes back to a three-quarter hero. No orbit,
+ * no counter-rotation, no camera move — fewer animated properties per frame
+ * keeps the scrub light so it never chunks or lags, while the lighting +
+ * easing keep the premium feel.
+ * ------------------------------------------------------------------------- */
+const MOBILE_FRAMES = {
+  hero: {
+    px: 0, py: 0.1, pz: 0, rx: 0.06, ry: -0.16, rz: 0, scale: 0.62,
+    jarRy: 0, capX: 0, capY: 0, capZ: 0, capRx: 0, capRy: 0, capRz: 0, camDolly: 0,
+    keyIntensity: 1.14, rimIntensity: 0.42, shadowOpacity: 0.3, shadowScale: 1.15,
+    canvasOpacity: 1, glowOpacity: 0.55, petalOpacity: 0.1,
+  },
+  // lid lifts up with a gentle tilt so you can see in; jar eases toward camera
+  open: {
+    py: 0.12, rx: 0.28, ry: -0.1, rz: 0.01, scale: 0.63,
+    capY: 0.6, capZ: 0.05, capRx: -0.26, capRz: 0.02,
+    keyIntensity: 1.3, rimIntensity: 0.62, shadowOpacity: 0.2, shadowScale: 1.34,
+    glowOpacity: 0.62, petalOpacity: 0.06,
+  },
+  // seated again, settled into a clean three-quarter hero (+ small scale bump)
+  closed: {
+    py: 0.32, rx: 0.07, ry: -0.5, rz: 0, scale: 0.66,
+    capY: 0, capZ: 0, capRx: 0, capRz: 0,
+    keyIntensity: 1.36, rimIntensity: 0.88, shadowOpacity: 0.18, shadowScale: 1.24,
+    glowOpacity: 0.64, petalOpacity: 0.06,
+  },
+}
+
 const ROT_FIELDS = ["rx", "ry", "rz", "capRx", "capRy", "capRz", "jarRy"]
 const TRAVEL_FIELDS = ["capX", "capY", "capZ", "camDolly"]
 
@@ -164,7 +194,7 @@ function deriveFrames(frames, { rot, travel, scaleMul }) {
 export const BREAKPOINTS = {
   desktop: { scrollVh: 3.2, scrub: 1.1, frames: deriveFrames(DESKTOP_FRAMES, { rot: 1, travel: 1, scaleMul: 1 }) },
   tablet: { scrollVh: 3.0, scrub: 1.1, frames: deriveFrames(DESKTOP_FRAMES, { rot: 0.72, travel: 0.72, scaleMul: 0.74 }) },
-  mobile: { scrollVh: 2.6, scrub: 1.0, frames: deriveFrames(DESKTOP_FRAMES, { rot: 0.55, travel: 0.6, scaleMul: 0.56 }) },
+  mobile: { scrollVh: 2.0, scrub: 1.0, simple: true, frames: MOBILE_FRAMES },
 }
 
 /* ---------------------------------------------------------------------------
@@ -177,6 +207,58 @@ export function buildProductTimeline({ gsap, cfg, refs }) {
   const F = cfg.frames
   const textA = pinEl.querySelector(".pe-state--a")
   const textD = pinEl.querySelector(".pe-state--d")
+
+  const makeTl = () =>
+    gsap.timeline({
+      defaults: { ease: "power2.inOut" },
+      scrollTrigger: {
+        trigger: sectionEl,
+        start: "top top",
+        end: () => "+=" + window.innerHeight * cfg.scrollVh,
+        pin: pinEl,
+        pinSpacing: true,
+        anticipatePin: 1,
+        scrub: cfg.scrub,
+        invalidateOnRefresh: true,
+      },
+    })
+
+  // ---- MOBILE: arrive → open → hold → close. Few tweens, calm motion. -----
+  if (cfg.simple) {
+    Object.assign(s, INITIAL_STATE, {
+      ...F.hero,
+      py: F.hero.py - 1.25,
+      pz: -0.7,
+      rx: 0.06,
+      ry: -0.55,
+      scale: F.hero.scale * 0.6,
+      canvasOpacity: 0,
+      glowOpacity: 0,
+      shadowOpacity: 0,
+    })
+
+    const tl = makeTl()
+    // 0 → 14 %  entry → hero (rise in, fade the layer up)
+    tl.to(s, { ...F.hero, duration: 0.14, ease: "power2.out" }, 0)
+    tl.to(s, { canvasOpacity: 1, duration: 0.08, ease: "none" }, 0)
+    // 14 → 22 %  hero holds (dead scroll — the jar just sits)
+    // 22 → 48 %  lid opens
+    tl.to(s, { ...F.open, duration: 0.26, ease: "power2.inOut" }, 0.22)
+    // 48 → 66 %  holds open (premium dwell — no tween)
+    // 66 → 92 %  lid closes, settles to a three-quarter hero
+    tl.to(s, { ...F.closed, duration: 0.26, ease: "power2.inOut" }, 0.66)
+
+    if (textA) {
+      gsap.set(textA, { autoAlpha: 0, y: 18 })
+      tl.fromTo(textA, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.05, ease: "power2.out" }, 0.03)
+      tl.to(textA, { autoAlpha: 0, y: -14, duration: 0.06, ease: "power2.in" }, 0.2)
+    }
+    if (textD) {
+      gsap.set(textD, { autoAlpha: 0, y: 18 })
+      tl.fromTo(textD, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.06, ease: "power2.out" }, 0.82)
+    }
+    return tl
+  }
 
   // Entry pose — derived from the hero frame so every breakpoint enters in
   // proportion. Reset here so resize re-builds start clean.
@@ -192,19 +274,7 @@ export function buildProductTimeline({ gsap, cfg, refs }) {
     shadowOpacity: 0,
   })
 
-  const tl = gsap.timeline({
-    defaults: { ease: "power2.inOut" },
-    scrollTrigger: {
-      trigger: sectionEl,
-      start: "top top",
-      end: () => "+=" + window.innerHeight * cfg.scrollVh,
-      pin: pinEl,
-      pinSpacing: true,
-      anticipatePin: 1,
-      scrub: cfg.scrub,
-      invalidateOnRefresh: true,
-    },
-  })
+  const tl = makeTl()
 
   // 0 → 10 %  ENTRY → HERO (rise in, fade the layer up). 10 → 15 % holds.
   tl.to(s, { ...F.hero, duration: 0.1, ease: "power2.out" }, 0)

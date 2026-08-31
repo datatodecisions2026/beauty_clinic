@@ -130,7 +130,10 @@ export default function ProductCanvas({ stateRef, reduced, pointerEnabled, lowPo
   }, [])
 
   const frameloop = reduced ? "demand" : active ? "always" : "never"
-  const dpr = reduced ? 1.25 : lowPower ? Math.min(1.5, typeof window !== "undefined" ? window.devicePixelRatio : 1) : [1, 2]
+  // Keep the product crisp: MSAA + a 2x-capped DPR even on phones. The mobile
+  // budget is recovered by the simpler choreography + the 30fps draw cap.
+  const deviceDpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
+  const dpr = reduced ? 1.5 : lowPower ? Math.min(2, deviceDpr) : [1, 2]
 
   return (
     <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>
@@ -138,11 +141,10 @@ export default function ProductCanvas({ stateRef, reduced, pointerEnabled, lowPo
         frameloop={frameloop}
         dpr={dpr}
         gl={{
-          antialias: !lowPower,
+          antialias: true,
           alpha: true,
           stencil: false,
           powerPreference: "high-performance",
-          ...(lowPower ? { precision: "mediump" } : null),
         }}
         camera={CAMERA}
         style={{ pointerEvents: "none" }}
