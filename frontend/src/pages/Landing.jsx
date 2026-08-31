@@ -4,7 +4,9 @@ import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring }
 import { fadeUp, fadeIn, slideLeft, slideRight, stagger, letterUp, ease } from "../lib/motion"
 import GoogleReviewsWidget from "../components/GoogleReviewsWidget"
 import FloatingParticles from "../components/FloatingParticles"
+import FloralAtmosphere from "../components/FloralAtmosphere"
 import Orb from "../components/Orb"
+import ProductExperience from "../components/product/ProductExperience"
 
 const MotionLink = motion.create(Link)
 
@@ -202,6 +204,7 @@ export default function Landing() {
           <div className="aurora-blob aurora-blob--4" />
         </div>
         <FloatingParticles count={30} />
+        <FloralAtmosphere />
 
         <motion.div className="container" style={{ y: heroBgY, position: "relative", zIndex: 2 }}>
           <div className="hero-inner">
@@ -254,18 +257,9 @@ export default function Landing() {
             </motion.div>
           </div>
         </motion.div>
-
-        {/* Marquee sits at the bottom of the hero — always in viewport */}
-        <div className="marquee-banner" style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 3 }}>
-          <div className="marquee-track">
-            {[...Array(2)].map((_, rep) =>
-              ["Nail Care","✦","Artistic Makeup","✦","Wax Care","✦","Eyelash Perming","✦","Facial Care","✦","Bridal Makeup","✦","Mesotherapy","✦","Hair Removal","✦"].map((s, i) => (
-                <span key={`${rep}-${i}`} className={s === "✦" ? "marquee-star" : "marquee-item"}>{s}</span>
-              ))
-            )}
-          </div>
-        </div>
       </section>
+
+      <ProductExperience />
 
       <section className="services-section">
         <div className="container">

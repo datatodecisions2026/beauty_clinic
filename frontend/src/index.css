@@ -1503,7 +1503,7 @@ body { overflow-x: clip; }
 .pe-state--a { left: 50%; top: 10%; transform: translateX(-50%); text-align: center; width: min(88vw, 460px); }
 .pe-state--b { left: max(20px, 6vw); top: 50%; transform: translateY(-50%); width: min(34vw, 340px); }
 .pe-state--c { right: max(20px, 6vw); top: 50%; transform: translateY(-50%); text-align: right; width: min(34vw, 340px); }
-.pe-state--d { left: 50%; bottom: 12%; transform: translateX(-50%); text-align: center; width: min(90vw, 480px); }
+.pe-state--d { left: 50%; bottom: 7%; transform: translateX(-50%); text-align: center; width: min(90vw, 480px); }
 
 .pe-state--b .pe-headline,
 .pe-state--c .pe-headline { font-size: clamp(1.9rem, 3.6vw, 3rem); }
