@@ -23,7 +23,14 @@ echo "== restart API =="
 pm2 restart beauty-clinic --update-env
 
 echo "== health =="
-sleep 3
-curl -s -o /dev/null -w "  API /health -> %{http_code}\n" https://backend.marynassifchbat.com/health
+# API needs a moment to finish its graceful restart — poll instead of a fixed sleep
+api_code=000
+for i in $(seq 1 15); do
+  api_code=$(curl -s -o /dev/null -w "%{http_code}" https://backend.marynassifchbat.com/health || true)
+  [ "$api_code" = "200" ] && break
+  sleep 2
+done
+echo "  API /health -> $api_code"
 curl -s -o /dev/null -w "  Site /      -> %{http_code}\n" https://marynassifchbat.com/
+[ "$api_code" = "200" ] || { echo "API did not come back healthy"; exit 1; }
 echo "done."
