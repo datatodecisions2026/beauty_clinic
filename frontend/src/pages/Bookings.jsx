@@ -147,7 +147,6 @@ export default function Bookings() {
                             onClick={() => { setSel({ service: s, date: null, time: null }) }}
                           >
                             <span className="service-opt-name">{s.servicetype}</span>
-                            <span className="service-opt-price">${parseFloat(s.price).toFixed(2)}</span>
                           </button>
                         ))}
                       </div>
@@ -212,12 +211,6 @@ export default function Bookings() {
                         <div className="summary-row">
                           <span className="summary-label">Service</span>
                           <span className="summary-val">{sel.service?.servicetype}</span>
-                        </div>
-                        <div className="summary-row">
-                          <span className="summary-label">Price</span>
-                          <span className="summary-val" style={{ color: "var(--pink)" }}>
-                            ${parseFloat(sel.service?.price || 0).toFixed(2)}
-                          </span>
                         </div>
                         <div className="summary-row">
                           <span className="summary-label">Date</span>
