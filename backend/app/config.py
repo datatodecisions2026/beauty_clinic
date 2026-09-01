@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     resend_from: str = ""
     frontend_url: str = ""
+    google_places_api_key: str = ""
+    google_place_id: str = ""
 
     class Config:
         env_file = ".env"

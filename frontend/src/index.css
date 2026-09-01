@@ -541,6 +541,9 @@ body::after {
 
 /* ===== REVIEWS SECTION ===== */
 .reviews-section { padding: 100px 0; background: var(--bg); }
+.reviews-depth { width: 100%; max-width: 1200px; height: 460px; margin: 0 auto; }
+.reviews-depth-attr { text-align: center; margin-top: 20px; font-size: 0.8rem; letter-spacing: 0.04em; color: var(--muted); font-family: 'Plus Jakarta Sans', sans-serif; }
+@media (max-width: 640px) { .reviews-depth { height: 420px; } }
 .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
 .review-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); transition: transform 0.25s ease, box-shadow 0.25s ease; }
 .review-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }

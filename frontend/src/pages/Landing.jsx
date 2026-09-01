@@ -1,8 +1,11 @@
 ﻿import { Link } from "react-router-dom"
 import { useRef, useEffect, useState } from "react"
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
 import { fadeUp, fadeIn, slideLeft, slideRight, stagger, letterUp, ease } from "../lib/motion"
+import api from "../lib/api"
 import GoogleReviewsWidget from "../components/GoogleReviewsWidget"
+import DepthCarousel from "../components/DepthCarousel"
 import FloatingParticles from "../components/FloatingParticles"
 import FloralAtmosphere from "../components/FloralAtmosphere"
 import Orb from "../components/Orb"
@@ -193,6 +196,15 @@ export default function Landing() {
   }
   const onHeroMouseLeave = () => { heroMouseX.set(0); heroMouseY.set(0) }
 
+  // Google reviews for the depth carousel (proxied + cached by the backend)
+  const { data: googleReviews } = useQuery({
+    queryKey: ["google-reviews"],
+    queryFn: async () => { const { data } = await api.get("/reviews/google"); return data },
+    staleTime: 60 * 60 * 1000,
+    retry: 1,
+  })
+  const reviewItems = (googleReviews?.reviews ?? []).filter(r => r.text)
+
   return (
     <>
       <section className="hero" onMouseMove={onHeroMouseMove} onMouseLeave={onHeroMouseLeave} style={{ position: "relative" }}>
@@ -347,8 +359,39 @@ export default function Landing() {
             <span className="section-tag">Testimonials</span>
             <h2 className="section-title">What Clients Say</h2>
           </div>
-          <GoogleReviewsWidget showHeader={false} />
         </div>
+        {reviewItems.length >= 3 ? (
+          <>
+            <div className="reviews-depth">
+              <DepthCarousel
+                items={reviewItems}
+                cardWidth={340}
+                cardHeight={400}
+                radius={20}
+                tint="#241a12"
+                depth={200}
+                spread={96}
+                tilt={20}
+                tiltDirection="right"
+                perspective={1500}
+                visibleCards={4}
+                falloff={0.18}
+                blur={5}
+                autoplay
+                autoplayDelay={4200}
+                loop
+              />
+            </div>
+            <p className="reviews-depth-attr">
+              {googleReviews?.rating ? `${googleReviews.rating.toFixed(1)} ★ · ` : ""}
+              {googleReviews?.total ? `${googleReviews.total} reviews on ` : "Reviews from "}Google
+            </p>
+          </>
+        ) : (
+          <div className="container">
+            <GoogleReviewsWidget showHeader={false} />
+          </div>
+        )}
       </motion.section>
 
       <section className="cta-contact-section">
