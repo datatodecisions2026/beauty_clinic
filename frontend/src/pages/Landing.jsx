@@ -265,7 +265,7 @@ export default function Landing() {
               <div className="hero-orb" aria-hidden="true">
                 <Orb hue={20} hoverIntensity={1} rotateOnHover forceHoverState={false} backgroundColor="#1A1519" />
               </div>
-              <img src="/images/hero-illustration.png" alt="Beauty" className="hero-img" />
+              <img src="/images/marychbatIcon.webp" alt="Beauty" className="hero-img" />
             </motion.div>
           </div>
         </motion.div>
