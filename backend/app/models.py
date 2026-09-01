@@ -45,6 +45,9 @@ class Appointment(Base):
     date = Column(Date, nullable=False)
     time = Column(Time, nullable=False)
     status = Column(String, default="Scheduled")
+    # Actual price agreed with the client for this appointment. Falls back to
+    # service.price when null — set by the admin when it differs from the list price.
+    final_price = Column(Numeric(10, 2), nullable=True)
 
     client = relationship("User", back_populates="appointments")
     service = relationship("Service", back_populates="appointments")

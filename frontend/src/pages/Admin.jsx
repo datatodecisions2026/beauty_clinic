@@ -65,7 +65,7 @@ export default function Admin() {
   const todayAppts = appointments.filter(a => a.date === today && a.status !== "Cancelled")
   const revenue = appointments
     .filter(a => a.status === "Scheduled")
-    .reduce((sum, a) => sum + parseFloat(a.service?.price || 0), 0)
+    .reduce((sum, a) => sum + parseFloat(a.final_price ?? a.service?.price ?? 0), 0)
 
   if (!user) return <div className="loading-wrap"><div className="spinner" /></div>
   if (user === "forbidden") return (
@@ -124,7 +124,7 @@ export default function Admin() {
 function AppointmentsTab({ appointments, services, clients, loading, qc }) {
   const [showForm, setShowForm] = useState(false)
   const [clientMode, setClientMode] = useState("existing") // "existing" | "new"
-  const [newAppt, setNewAppt] = useState({ client_id: "", service_id: "", date: today, time: "09:00" })
+  const [newAppt, setNewAppt] = useState({ client_id: "", service_id: "", date: today, time: "09:00", final_price: "" })
   const [newClient, setNewClient] = useState({ first_name: "", last_name: "", email: "", phone_number: "" })
   const [editId, setEditId] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -139,7 +139,7 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
       qc.invalidateQueries({ queryKey: ["admin-appointments"] })
       qc.invalidateQueries({ queryKey: ["admin-users"] })
       setShowForm(false)
-      setNewAppt({ client_id: "", service_id: "", date: today, time: "09:00" })
+      setNewAppt({ client_id: "", service_id: "", date: today, time: "09:00", final_price: "" })
       setNewClient({ first_name: "", last_name: "", email: "", phone_number: "" })
     },
   })
@@ -163,7 +163,13 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
       const { data: created } = await createClient.mutateAsync(newClient)
       clientId = created.id
     }
-    createAppt.mutate({ client_id: clientId, service_id: parseInt(newAppt.service_id), date: newAppt.date, time: newAppt.time })
+    createAppt.mutate({
+      client_id: clientId,
+      service_id: parseInt(newAppt.service_id),
+      date: newAppt.date,
+      time: newAppt.time,
+      final_price: newAppt.final_price === "" ? null : parseFloat(newAppt.final_price),
+    })
   }
 
   return (
@@ -250,6 +256,17 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
                 <label className="form-label">Time</label>
                 <input className="form-input" type="time" required value={newAppt.time} onChange={e => setNewAppt({ ...newAppt, time: e.target.value })} />
               </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">
+                  Agreed Price <span style={{ fontWeight: 400, color: "var(--muted)" }}>(optional)</span>
+                </label>
+                <input
+                  className="form-input" type="number" min="0" step="0.01"
+                  placeholder={`Default $${services.find(s => s.id === parseInt(newAppt.service_id))?.price ?? "—"}`}
+                  value={newAppt.final_price}
+                  onChange={e => setNewAppt({ ...newAppt, final_price: e.target.value })}
+                />
+              </div>
               <button type="submit" className="btn btn-pink" style={{ height: 48, justifyContent: "center" }} disabled={isSubmitting}>
                 {isSubmitting ? "Booking…" : clientMode === "new" ? "Create & Book" : "Book"}
               </button>
@@ -264,7 +281,7 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
           <div style={{ overflowX: "auto" }}>
             <table className="admin-table">
               <thead>
-                <tr><th>Client</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>Client</th><th>Service</th><th>Price</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 {filtered.map(a => (
@@ -277,6 +294,15 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
                             {services.map(s => <option key={s.id} value={s.id}>{s.servicetype}</option>)}
                           </select>
                         </td>
+                        <td>
+                          <input
+                            className="form-input" style={{ padding: "5px 8px", width: 90 }} type="number" min="0" step="0.01"
+                            placeholder={`$${services.find(s => s.id === parseInt(editForm.service_id))?.price ?? a.service?.price}`}
+                            value={editForm.final_price}
+                            onChange={e => setEditForm({ ...editForm, final_price: e.target.value })}
+                          />
+                          <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 2 }}>Blank = list price</div>
+                        </td>
                         <td><input className="form-input" style={{ padding: "5px 8px" }} type="date" value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} /></td>
                         <td><input className="form-input" style={{ padding: "5px 8px" }} type="time" value={editForm.time} onChange={e => setEditForm({ ...editForm, time: e.target.value })} /></td>
                         <td>
@@ -286,7 +312,17 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
                         </td>
                         <td>
                           <div style={{ display: "flex", gap: 6 }}>
-                            <button className="btn-success-sm" disabled={updateAppt.isPending} onClick={() => updateAppt.mutate({ id: editId, service_id: parseInt(editForm.service_id), date: editForm.date, time: editForm.time, status: editForm.status })}>Save</button>
+                            <button
+                              className="btn-success-sm" disabled={updateAppt.isPending}
+                              onClick={() => updateAppt.mutate({
+                                id: editId,
+                                service_id: parseInt(editForm.service_id),
+                                date: editForm.date,
+                                time: editForm.time,
+                                status: editForm.status,
+                                final_price: editForm.final_price === "" ? null : parseFloat(editForm.final_price),
+                              })}
+                            >Save</button>
                             <button className="btn-danger-sm" onClick={() => setEditId(null)}>Back</button>
                           </div>
                         </td>
@@ -297,16 +333,34 @@ function AppointmentsTab({ appointments, services, clients, loading, qc }) {
                           <div style={{ fontWeight: 600 }}>{a.client?.first_name} {a.client?.last_name}</div>
                           <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{a.client?.email}</div>
                         </td>
+                        <td>{a.service?.servicetype}</td>
                         <td>
-                          <div>{a.service?.servicetype}</div>
-                          <div style={{ fontSize: "0.75rem", color: "var(--pink)", fontWeight: 700 }}>${a.service?.price}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ color: "var(--pink)", fontWeight: 700 }}>
+                              ${parseFloat(a.final_price ?? a.service?.price ?? 0).toFixed(2)}
+                            </span>
+                            {a.final_price != null && (
+                              <span className="badge badge-warning" style={{ fontSize: "0.62rem" }} title={`List price: $${parseFloat(a.service?.price ?? 0).toFixed(2)}`}>
+                                Agreed
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>{a.date}</td>
                         <td>{a.time}</td>
                         <td><span className={"badge " + (a.status === "Cancelled" ? "badge-danger" : a.status === "Pending" ? "badge-warning" : "badge-success")}>{a.status}</span></td>
                         <td>
                           <div style={{ display: "flex", gap: 6 }}>
-                            <button className="btn-success-sm" onClick={() => { setEditId(a.id); setEditForm({ service_id: a.service?.id, date: a.date, time: a.time, status: a.status }) }}>Edit</button>
+                            <button
+                              className="btn-success-sm"
+                              onClick={() => {
+                                setEditId(a.id)
+                                setEditForm({
+                                  service_id: a.service?.id, date: a.date, time: a.time, status: a.status,
+                                  final_price: a.final_price != null ? String(a.final_price) : "",
+                                })
+                              }}
+                            >Edit</button>
                             {a.status !== "Cancelled" && <button className="btn-danger-sm" disabled={cancelAppt.isPending} onClick={() => cancelAppt.mutate(a.id)}>Cancel</button>}
                           </div>
                         </td>

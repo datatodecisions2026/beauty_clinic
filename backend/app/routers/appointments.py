@@ -109,7 +109,10 @@ async def admin_create_appointment(
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
 
-    appointment = Appointment(client_id=data.client_id, service_id=data.service_id, date=data.date, time=data.time)
+    appointment = Appointment(
+        client_id=data.client_id, service_id=data.service_id, date=data.date, time=data.time,
+        final_price=data.final_price,
+    )
     db.add(appointment)
     await db.commit()
     await db.refresh(appointment)
@@ -143,14 +146,19 @@ async def update_appointment(
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    if data.service_id is not None:
-        appointment.service_id = data.service_id
-    if data.date is not None:
-        appointment.date = data.date
-    if data.time is not None:
-        appointment.time = data.time
-    if data.status is not None:
-        appointment.status = data.status
+    fields = data.model_dump(exclude_unset=True)
+
+    if fields.get("service_id") is not None:
+        appointment.service_id = fields["service_id"]
+    if fields.get("date") is not None:
+        appointment.date = fields["date"]
+    if fields.get("time") is not None:
+        appointment.time = fields["time"]
+    if fields.get("status") is not None:
+        appointment.status = fields["status"]
+    if "final_price" in fields:
+        # Sent explicitly (including null) — null clears the override back to the service's list price.
+        appointment.final_price = fields["final_price"]
 
     await db.commit()
     await db.refresh(appointment)

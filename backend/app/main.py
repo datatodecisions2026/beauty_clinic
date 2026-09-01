@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from app.database import engine, Base
 from app.routers import auth, appointments, services, reviews, users
 
@@ -31,6 +32,11 @@ app.include_router(users.router)
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # create_all only adds new tables, not new columns on existing ones —
+        # patch appointments.final_price in for deployments that predate it.
+        await conn.execute(text(
+            "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS final_price NUMERIC(10, 2)"
+        ))
 
 
 @app.get("/health")

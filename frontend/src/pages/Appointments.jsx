@@ -80,10 +80,10 @@ export default function Appointments() {
                     <i className="fas fa-clock appt-meta-icon" />
                     <span>{a.time}</span>
                   </div>
-                  {a.service.price && (
+                  {a.final_price != null && (
                     <div className="appt-meta-row">
                       <i className="fas fa-tag appt-meta-icon" />
-                      <span>${parseFloat(a.service.price).toFixed(2)}</span>
+                      <span>${parseFloat(a.final_price).toFixed(2)}</span>
                     </div>
                   )}
                 </div>

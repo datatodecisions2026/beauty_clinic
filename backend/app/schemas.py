@@ -76,6 +76,7 @@ class AppointmentAdminCreate(BaseModel):
     service_id: int
     date: date
     time: time
+    final_price: Optional[float] = None
 
 
 class AppointmentUpdate(BaseModel):
@@ -83,6 +84,8 @@ class AppointmentUpdate(BaseModel):
     date: Optional[date] = None
     time: Optional[time] = None
     status: Optional[str] = None
+    # Explicit null clears the override and falls back to the service's list price.
+    final_price: Optional[float] = None
 
 
 class AppointmentOut(BaseModel):
@@ -92,6 +95,7 @@ class AppointmentOut(BaseModel):
     date: date
     time: time
     status: str
+    final_price: Optional[float] = None
 
     class Config:
         from_attributes = True
