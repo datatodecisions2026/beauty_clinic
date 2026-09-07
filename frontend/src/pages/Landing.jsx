@@ -319,7 +319,7 @@ export default function Landing() {
               <motion.div className="about-stats-row"
                 variants={stagger(0.15, 0.2)} initial="hidden"
                 whileInView="show" viewport={{ once: true }}>
-                {[["500","+","Happy Clients"],["5","+","Years"],["10","","Services"]].map(([n,suf,l]) => (
+                {[["500","+","Happy Clients"],["20","+","Years"],["10","","Services"]].map(([n,suf,l]) => (
                   <motion.div key={l} className="about-stat" variants={fadeUp}>
                     <span className="about-stat-num"><CountUp target={n} suffix={suf} /></span>
                     <span className="about-stat-lbl">{l}</span>
