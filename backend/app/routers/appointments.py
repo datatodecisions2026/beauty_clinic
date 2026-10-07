@@ -9,6 +9,7 @@ from app.models import Appointment, Service, User
 from app.schemas import AppointmentCreate, AppointmentAdminCreate, AppointmentUpdate, AppointmentOut
 from app.auth import get_current_user, get_current_staff
 from app.email_service import send_booking_confirmation, send_cancellation
+from app import hub
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
@@ -90,6 +91,7 @@ async def create_appointment(
         data.time.strftime("%I:%M %p"),
         appointment.status,
     )
+    hub.emit(current_user, "customer.purchase_created", {"kind": "appointment", "date": data.date.isoformat()})
     return appointment
 
 
@@ -127,6 +129,7 @@ async def admin_create_appointment(
         client.email, client.first_name, service.servicetype,
         data.date.strftime("%b %d, %Y"), data.time.strftime("%I:%M %p"), appointment.status,
     )
+    hub.emit(client, "customer.purchase_created", {"kind": "appointment", "date": data.date.isoformat()})
     return appointment
 
 

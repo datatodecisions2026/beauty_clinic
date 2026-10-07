@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     frontend_url: str = ""
     google_places_api_key: str = ""
     google_place_id: str = ""
+    # Customer Hub (central customer identity). Empty = disabled.
+    hub_url: str = ""
+    hub_hmac_secret: str = ""
 
     class Config:
         env_file = ".env"

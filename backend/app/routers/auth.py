@@ -7,6 +7,7 @@ from app.models import User
 from app.schemas import UserCreate, UserOut, Token
 from app.auth import verify_password, hash_password, create_access_token, get_current_user
 from app.email_service import send_welcome
+from app import hub
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -37,6 +38,7 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(user)
     send_welcome(user.email, user.first_name)
+    hub.emit(user, "customer.created")
     return user
 
 

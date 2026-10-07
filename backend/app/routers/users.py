@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas import UserOut
 from app.auth import get_current_staff, pwd_context
+from app import hub
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -58,4 +59,5 @@ async def admin_create_client(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    hub.emit(user, "customer.created")
     return user
