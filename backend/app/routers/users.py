@@ -1,3 +1,4 @@
+import asyncio
 import secrets
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,10 +7,34 @@ from typing import List
 from app.database import get_db
 from app.models import User
 from app.schemas import UserOut
-from app.auth import get_current_staff, pwd_context
+from app.auth import get_current_staff, get_current_user, pwd_context
 from app import hub
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+# Consent lives in the Customer Hub (single source of truth); the clinic only relays the client's choice.
+@router.get("/me/preferences")
+async def get_preferences(current_user: User = Depends(get_current_user)):
+    whatsapp = await asyncio.to_thread(hub.whatsapp_consent, current_user.id)
+    return {
+        "available": whatsapp is not None,
+        "whatsapp": whatsapp is True,
+        "has_phone": bool(current_user.phone_number),
+    }
+
+
+@router.put("/me/preferences")
+async def set_preferences(data: dict, current_user: User = Depends(get_current_user)):
+    whatsapp = data.get("whatsapp")
+    if not isinstance(whatsapp, bool):
+        raise HTTPException(status_code=422, detail="whatsapp must be true or false")
+    if whatsapp and not current_user.phone_number:
+        raise HTTPException(status_code=422, detail="Add a phone number first")
+    if not hub.settings.hub_url:
+        raise HTTPException(status_code=503, detail="Preferences are temporarily unavailable")
+    hub.consent(current_user, whatsapp, "account-preferences")
+    return {"available": True, "whatsapp": whatsapp, "has_phone": bool(current_user.phone_number)}
 
 
 @router.get("", response_model=List[UserOut])

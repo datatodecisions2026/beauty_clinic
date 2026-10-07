@@ -32,3 +32,9 @@ def test_emit_is_a_noop_when_unconfigured(monkeypatch):
     monkeypatch.setattr(hub.settings, "hub_url", "")
     hub.emit(SimpleNamespace(), "customer.created")  # would raise on a bare namespace if it tried to build a body
     assert not called
+
+
+def test_consent_helpers_are_inert_when_unconfigured(monkeypatch):
+    monkeypatch.setattr(hub.settings, "hub_url", "")
+    assert hub.whatsapp_consent(7) is None
+    hub.consent(SimpleNamespace(), True, "signup-form")  # would raise on a bare namespace if it tried to build a body

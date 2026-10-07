@@ -16,6 +16,7 @@ export default function Signup() {
     birth_date: "", gender: "Female",
     country: "", state: "",
     password: "", confirm_password: "",
+    whatsapp_opt_in: false,
   })
   const [err, setErr] = useState("")
 
@@ -26,6 +27,10 @@ export default function Signup() {
     setErr("")
     if (form.password !== form.confirm_password) {
       setErr("Passwords do not match.")
+      return
+    }
+    if (form.whatsapp_opt_in && !form.phone_number.trim()) {
+      setErr("Add your phone number so we know where to send your notes.")
       return
     }
     try {
@@ -119,6 +124,22 @@ export default function Signup() {
               <input className="form-input" type="password" placeholder="••••••••" required value={form.confirm_password} onChange={set("confirm_password")} autoComplete="new-password" />
             </div>
           </div>
+
+          <label style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer", margin: "4px 0 16px" }}>
+            <input
+              type="checkbox"
+              checked={form.whatsapp_opt_in}
+              onChange={(e) => setForm({ ...form, whatsapp_opt_in: e.target.checked })}
+              style={{ marginTop: 5, width: 16, height: 16, flexShrink: 0 }}
+            />
+            <span>
+              <strong>Remember my moments</strong>{" "}
+              <em>(special offers &amp; birthday wishes)</em>
+              <span style={{ display: "block", fontSize: "0.8rem", opacity: 0.75, marginTop: 4 }}>
+                Gentle, occasional messages on WhatsApp, never about your treatments. Reply STOP anytime.
+              </span>
+            </span>
+          </label>
 
           <button
             type="submit"

@@ -39,6 +39,8 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.refresh(user)
     send_welcome(user.email, user.first_name)
     hub.emit(user, "customer.created")
+    if data.whatsapp_opt_in is True and user.phone_number:
+        hub.consent(user, True, "signup-form")
     return user
 
 

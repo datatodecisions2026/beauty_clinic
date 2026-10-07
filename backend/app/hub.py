@@ -78,3 +78,45 @@ def emit(user, event_type: str, data: dict | None = None) -> None:
         threading.Thread(target=_post, args=(body,), daemon=True).start()
     except Exception as e:  # noqa: BLE001
         print(f"[hub] emit failed: {e}")
+
+
+# ─── WhatsApp consent ────────────────────────────────────────────────────────
+# One checkbox covers "special offers & birthday wishes" -> these Hub purposes, scoped to this brand.
+CONSENT_PURPOSES = ["promotions", "birthday", "gifting"]
+CONSENT_VERSION = "2026-10-v1"
+CONSENT_WORDING = (
+    "Remember my moments (special offers & birthday wishes). Gentle, occasional messages from Beauty Clinic "
+    "on WhatsApp, never about your treatments. Reply STOP anytime."
+)
+
+
+def consent(user, granted: bool, source: str) -> None:
+    emit(user, "customer.opted_in" if granted else "customer.opted_out", {
+        "channel": "whatsapp",
+        "purposes": CONSENT_PURPOSES,
+        "consent_version": CONSENT_VERSION,
+        "source": source,
+        "evidence": CONSENT_WORDING if granted else "withdrawn in account preferences",
+    })
+
+
+def whatsapp_consent(customer_id) -> bool | None:
+    """True/False from the Hub, or None when the Hub is off/unreachable (the UI then hides the toggle). Blocking: call via a thread."""
+    if not settings.hub_url or not settings.hub_hmac_secret:
+        return None
+    try:
+        request_id = str(uuid.uuid4())
+        ts = str(int(time.time()))
+        r = requests.get(
+            f"{settings.hub_url}/v1/consent/{customer_id}",
+            headers={
+                "x-site-id": "beauty-clinic",
+                "x-request-id": request_id,
+                "x-request-timestamp": ts,
+                "x-signature": sign(settings.hub_hmac_secret, ts, request_id, ""),
+            },
+            timeout=3,
+        )
+        return bool(r.json().get("whatsapp")) if r.ok else None
+    except Exception:  # noqa: BLE001
+        return None

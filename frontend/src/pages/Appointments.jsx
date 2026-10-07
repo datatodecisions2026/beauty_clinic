@@ -7,6 +7,39 @@ const statusClass = (s) => s === "Cancelled" ? "badge badge-danger" : s === "Pen
 
 const FILTERS = ["All", "Upcoming", "Cancelled"]
 
+// Consent is stored in the Customer Hub; this only shows and relays the client's choice. Hidden if the Hub is unreachable.
+function MomentsPreference() {
+  const queryClient = useQueryClient()
+  const { data } = useQuery({
+    queryKey: ["preferences"],
+    queryFn: async () => (await api.get("/users/me/preferences")).data,
+  })
+  const toggle = useMutation({
+    mutationFn: async (whatsapp) => (await api.put("/users/me/preferences", { whatsapp })).data,
+    onSuccess: (d) => queryClient.setQueryData(["preferences"], d),
+  })
+  if (!data?.available) return null
+  const blocked = !data.has_phone && !data.whatsapp
+  return (
+    <label style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer", margin: "0 0 24px" }}>
+      <input
+        type="checkbox"
+        checked={data.whatsapp}
+        disabled={toggle.isPending || blocked}
+        onChange={(e) => toggle.mutate(e.target.checked)}
+        style={{ marginTop: 5, width: 16, height: 16, flexShrink: 0 }}
+      />
+      <span>
+        <strong>Remember my moments</strong> <em>(special offers &amp; birthday wishes)</em>
+        <span style={{ display: "block", fontSize: "0.8rem", opacity: 0.75, marginTop: 4 }}>
+          Gentle, occasional messages on WhatsApp, never about your treatments. Reply STOP anytime.
+          {blocked && " Add a phone number to your profile to turn this on."}
+        </span>
+      </span>
+    </label>
+  )
+}
+
 export default function Appointments() {
   const [filter, setFilter] = useState("All")
   const queryClient = useQueryClient()
@@ -34,6 +67,8 @@ export default function Appointments() {
           <span className="section-tag">Your Schedule</span>
           <h1 className="section-title">My Appointments</h1>
         </div>
+
+        <MomentsPreference />
 
         <div className="appts-filters">
           {FILTERS.map(f => (

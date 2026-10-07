@@ -25,6 +25,8 @@ class UserCreate(BaseModel):
     state: Optional[str] = None
     gender: Optional[str] = "Female"
     phone_number: Optional[str] = None
+    # Ticked "Remember my moments" box. Only counts together with a phone number.
+    whatsapp_opt_in: bool = False
 
 
 class UserOut(BaseModel):
